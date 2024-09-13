@@ -5,12 +5,96 @@ let ITERATION_TIME = 5;
 let AUDIO_POP = new Audio('pop.mp3');
 
 
+let DATA = [];
+
+let algo_iter = undefined;
+let is_playing = false;
+
+
+// USER INTERFACE
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
 
+let btn_introduce = document.getElementById('btn-introduce');
+let btn_random = document.getElementById('btn-random');
 
-let DATA = [15, 29, 98, 91, 50, 37, 96, 11, 63, 5, 62, 64, 6, 25, 72, 99, 95, 27, 82, 77, 12, 26, 46, 84, 88, 9, 1, 10, 2, 24, 31, 34, 33, 60, 75, 79, 74, 43, 53, 35, 65, 97, 78, 85, 54, 22, 7, 30, 89, 40, 42, 61, 13, 90, 14, 56, 58, 94, 41, 49, 76, 23, 4, 36, 47, 68, 100, 20, 55, 18, 69, 44, 39, 66, 19, 8, 16, 80, 21, 83, 93, 71, 38, 32, 86, 57, 92, 73, 70, 45, 59, 28, 48, 52, 67, 51, 3, 87, 81, 17 ];
+let btn_play = document.getElementById('btn-play');
+let btn_stop = document.getElementById('btn-stop');
 
+let user_list = document.getElementById('user-list');
+
+
+function list2str(l){
+    str = ''
+    for (let i=0; i < l.length; i++){
+        if (i > 0){
+            str += ', ';
+        }
+        str += l[i];
+    }
+    return str;
+}
+
+function str2list(){
+    let l = [];
+
+    let str_numbers = user_list.value.split(',');
+    return str_numbers.map(function(e){
+        return Number(e.trim());
+    })
+}
+
+function shuffle(array) {
+    let currentIndex = array.length;
+
+        while (currentIndex != 0) {
+            let randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+
+            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+        }
+}
+
+function generate_random_list(){
+    let quantity = 0;
+    try {
+        quantity = Number(prompt('cantidad de numeros'));
+    } catch (error) {
+        alert('What are you doing broh? the data you give me are not correct!');
+        return;
+    }
+
+    let numbers = [];
+    for (let i = 0; i < quantity; i++){
+        numbers.push(i);
+    }
+
+    shuffle(numbers);
+
+    let str = list2str(numbers);
+    user_list.value = str;
+    introduce_data(numbers);
+}
+
+function introduce_data(data){
+    DATA = data;
+    render(DATA, []);
+    algo_iter = undefined;
+}
+
+function introduce_data_user_list(){
+    let n = str2list(user_list.value);
+    introduce_data(n);
+}
+
+
+btn_introduce.addEventListener('click', introduce_data_user_list);
+btn_random.addEventListener('click', generate_random_list);
+
+btn_play.addEventListener('click', function () {play_algorithm(bubble_sort)});
+btn_stop.addEventListener('click', stop_animation);
+
+//-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 function convert_data_to_height(min_data, max_data, data){
     let point1 = [min_data, 0];
@@ -49,6 +133,35 @@ function initiate(){
     canvas.height = CANVAS_RESOLUTION_FACTOR * 9;
 }
 
+function set_ui_disabled(v){
+    user_list.disabled = v;
+    btn_play.disabled = v;
+    btn_introduce.disabled = v;
+    btn_random.disabled = v;
+}
+
+async function play_algorithm(algo_func){
+    is_playing = true;
+    set_ui_disabled(true);
+    let is_ended = false;
+    let iter_algo = algo_iter;
+    if (iter_algo === undefined){
+        iter_algo = algo_func();
+    }
+    while (is_playing){
+        is_ended = await iter_algo.next();
+    }
+
+    if (is_ended){
+        animation_ctx = undefined;
+    }
+}
+
+function stop_animation(algo_func){
+    is_playing = false;
+    set_ui_disabled(false);
+}
+
 async function sleep(time){
     await new Promise(r => setTimeout(r, time));
 }
@@ -57,45 +170,49 @@ function swap(data, i1, i2){
     let temp = data[i1];
     data[i1] = data[i2];
     data[i2] = temp;
-    AUDIO_POP.play();
+    //AUDIO_POP.play();
 }
 
-async function bubble_sort(data){
-    initiate();
+async function* bubble_sort(){
+    let data = DATA
 
     let i1 = 0;
     let i2 = 1;
+    let end = data.length;
 
     if (data.length <= 1){
         render(DATA);
-        return;
+        return yield true;
     } else if (data.length == 2){
-        render(DATA, [i1, i2]);
+        render(data, [i1, i2]);
         await sleep(ITERATION_TIME);
         if (data[i1] > data[i2]) {
-            swap(DATA, i1, i2);
+            swap(data, i1, i2);
         }
-        render(DATA , []);
-        return
+        render(data , []);
+        return yield true;
     }
 
-    let end = data.length;
-    render(DATA, [i1, i2]);
+    render(data, [i1, i2]);
     await sleep(ITERATION_TIME);
     while (end > 2){
         while (i2 <= end){
-            if (DATA[i1] > DATA[i2]) {
-                swap(DATA, i1, i2);
+            if (data[i1] > data[i2]) {
+                swap(data, i1, i2);
             }
-            render(DATA, [i1, i2]);
+            render(data, [i1, i2]);
             await sleep(ITERATION_TIME);
             i1++;
             i2++;
+            yield false;
         }
         end--;
         i1=0;
         i2=1;
+        yield false;
     }
+    is_playing = false;
+    return yield true;
 }
 
-bubble_sort(DATA);
+initiate();

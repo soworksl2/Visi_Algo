@@ -11,12 +11,41 @@ body {
     background-color: gray;
 
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
 }
 
-canvas {
+.body-wrapper {
     width: 50%;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    row-gap: 2ch;
+}
+
+button {
+    padding: 1ch;
+}
+
+canvas {
+    width: 100%;
     aspect-ratio: 16 / 9;
     background-color: black;
+}
+
+.user-input-block {
+    width: 100%;
+    display: flex;
+}
+
+.user-input-block__buttons button {
+    flex-grow: 1;
+}
+
+#user-list {
+    flex-grow: 1;
 }

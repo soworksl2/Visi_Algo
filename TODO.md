@@ -1,4 +1,4 @@
-- Subir projecto a github
-- Hospedarlo en github pages
-- Crear una interfaz de usuario
+- Subir projecto a github *
+- Hospedarlo en github pages *
+- Crear una interfaz de usuario *
 - Arreglar el problema del sonido
